@@ -16,6 +16,8 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static java.util.UUID.randomUUID;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+import static org.springframework.web.reactive.function.server.RouterFunctions.*;
 
 @SpringBootApplication
 public class MovieServiceApplication {
@@ -37,10 +39,8 @@ public class MovieServiceApplication {
 
 	@Bean
 	RouterFunction<?> routerFunction(MovieService movieService){
-		return RouterFunctions.route(RequestPredicates.GET("/movies"), request -> {
-			return ServerResponse.ok().body(movieService.allMovies(), Movie.class);
-		}).andRoute(RequestPredicates.GET("/movie/{id}"), request -> {
-			return ServerResponse.ok().body(movieService.getMovie(request.pathVariable("id")), Movie.class);
-		});
+		MovieHandler handler = new MovieHandler(movieService);
+		return route(GET("/movies"),handler::allMovies)
+				.andRoute(GET("/movie/{id}"), handler::getMovie);
 	}
 }
