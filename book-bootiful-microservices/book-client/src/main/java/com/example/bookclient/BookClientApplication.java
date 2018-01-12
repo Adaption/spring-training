@@ -11,7 +11,14 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.hateoas.Resources;
+import org.springframework.integration.annotation.Gateway;
+import org.springframework.integration.annotation.IntegrationComponentScan;
+import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.messaging.MessageChannel;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,49 +27,72 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
+@EnableBinding(BookChannels.class)
 @EnableCircuitBreaker
 @EnableFeignClients
+@IntegrationComponentScan
 @EnableZuulProxy
 @EnableDiscoveryClient
 @SpringBootApplication
 public class BookClientApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(BookClientApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(BookClientApplication.class, args);
+    }
 }
 
+
+interface BookChannels {
+    @Output("createBook")
+    MessageChannel createBook();
+}
+
+
 @FeignClient("book-service")
-interface BookReader{
-	@RequestMapping(method = RequestMethod.GET, value = "books")
-	Resources<Book> read();
+interface BookReader {
+    @RequestMapping(method = RequestMethod.GET, value = "books")
+    Resources<Book> read();
+}
+
+@MessagingGateway
+interface BookWriter {
+
+    @Gateway(requestChannel = "createBook")
+    void write(String rn);
 }
 
 @Data
 @AllArgsConstructor
-class Book{
-	private String name;
-	private String author;
+class Book {
+    private String bookName;
+    private String bookAuthor;
 }
 
 @RestController
 @RequestMapping("/books")
-class BookApiGateWay{
+class BookApiGateWay {
 
-	private BookReader bookReader;
+    private final BookReader bookReader;
+    private final BookWriter bookWriter;
 
-	@Autowired
-	public BookApiGateWay(BookReader bookReader) {
-		this.bookReader = bookReader;
-	}
+    @Autowired
+    public BookApiGateWay(BookReader bookReader, BookWriter bookWriter) {
+        this.bookReader = bookReader;
+        this.bookWriter = bookWriter;
+    }
 
-	public Collection<String> fallback(){
-		return new ArrayList<>();
-	}
+    @RequestMapping(method = RequestMethod.POST)
+    public void createBook(@RequestBody Book book) {
+        this.bookWriter.write(book.getBookName());
+    }
 
-	@HystrixCommand(fallbackMethod = "fallback")
-	@RequestMapping(method = RequestMethod.GET,value = "/names")
-	public Collection<String> names(){
-		return this.bookReader.read().getContent().stream().map(b -> b.getName()).collect(Collectors.toList());
-	}
+    public Collection<String> fallback() {
+        return new ArrayList<>();
+    }
+
+    @HystrixCommand(fallbackMethod = "fallback")
+    @RequestMapping(method = RequestMethod.GET, value = "/names")
+    public Collection<String> names() {
+        return this.bookReader.read().getContent().stream().map(b -> b.getBookName()).collect(Collectors.toList());
+    }
 }
