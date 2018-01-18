@@ -8,3 +8,4 @@ Training for Building Microservices using Spring
 - book-client - Feign, Config Client, Eureka Discovery,Rest Repositories, Stream Rabbit, Zipkin Client, Hystrix, Zuul, Cloud OAuth2, HATEOAS, Web, Actuator, Lombok
 - hystrix-dashboard - Hystrix Dashboard, Config Client, Eureka Discovery
 - zipkin-service - Zipkin UI, Zipkin Server, Eureka Discovery
+- auth-service - Cloud OAuth2, Eureka Discovery, Config Client, H2, JPA, Web
