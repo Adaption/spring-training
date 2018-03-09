@@ -15,6 +15,7 @@ import org.springframework.integration.annotation.Gateway;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.MessagingGateway;
 import org.springframework.messaging.MessageChannel;
+import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RequestPredicates;
@@ -30,6 +31,7 @@ import static org.springframework.web.reactive.function.BodyInserters.*;
 import static org.springframework.web.reactive.function.server.RequestPredicates.*;
 import static org.springframework.web.reactive.function.server.ServerResponse.*;
 
+@EnableResourceServer
 @EnableBinding(ReservationChannels.class)
 @EnableFeignClients
 @EnableZuulProxy
