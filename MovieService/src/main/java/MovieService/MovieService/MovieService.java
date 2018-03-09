@@ -12,13 +12,13 @@ public class MovieService {
     public MovieService(MovieRepository movieRepository){
         this.movieRepository = movieRepository;
     }
-
-    Flux<Movie> allMovies(){
-        return movieRepository.findAll();
-    }
-
-    Mono<Movie> getMovie(String movieId){
-        return movieRepository.findById(movieId);
-    }
+//
+//    Flux<Movie> allMovies(){
+//        return movieRepository.findAll();
+//    }
+//
+//    Mono<Movie> getMovie(String movieId){
+//        return movieRepository.findById(movieId);
+//    }
 
 }

@@ -26,16 +26,16 @@ public class MovieServiceApplication {
 		SpringApplication.run(MovieServiceApplication.class, args);
 	}
 
-	@Bean
-	CommandLineRunner demo(MovieRepository movieRepository){
-		return args -> {
-			movieRepository.deleteAll().subscribe(null, null, () -> {
-				Stream.of("SOE596", "SNIS193", "MIDE124", "SMD144", "MKDS99", "SKY157", "JUX501")
-						.forEach(name -> movieRepository.save(new Movie(UUID.randomUUID().toString(), name)).subscribe(movie -> System.out.println(movie.toString())));
-			});
-
-		};
-	}
+//	@Bean
+//	CommandLineRunner demo(MovieRepository movieRepository){
+//		return args -> {
+//			movieRepository.deleteAll().subscribe(null, null, () -> {
+//				Stream.of("SOE596", "SNIS193", "MIDE124", "SMD144", "MKDS99", "SKY157", "JUX501")
+//						.forEach(name -> movieRepository.save(new Movie(UUID.randomUUID().toString(), name)).subscribe(movie -> System.out.println(movie.toString())));
+//			});
+//
+//		};
+//	}
 
 	@Bean
 	RouterFunction<?> routerFunction(MovieService movieService){
