@@ -8,7 +8,13 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.netflix.feign.EnableFeignClients;
 import org.springframework.cloud.netflix.feign.FeignClient;
 import org.springframework.cloud.netflix.zuul.EnableZuulProxy;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.context.annotation.Bean;
+import org.springframework.integration.annotation.Gateway;
+import org.springframework.integration.annotation.IntegrationComponentScan;
+import org.springframework.integration.annotation.MessagingGateway;
+import org.springframework.messaging.MessageChannel;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.RequestPredicates;
@@ -20,8 +26,14 @@ import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 
+import static org.springframework.web.reactive.function.BodyInserters.*;
+import static org.springframework.web.reactive.function.server.RequestPredicates.*;
+import static org.springframework.web.reactive.function.server.ServerResponse.*;
+
+@EnableBinding(ReservationChannels.class)
 @EnableFeignClients
 @EnableZuulProxy
+@IntegrationComponentScan
 @EnableCircuitBreaker
 @EnableDiscoveryClient
 @SpringBootApplication
@@ -31,17 +43,33 @@ public class ReservationClientApplication {
 		SpringApplication.run(ReservationClientApplication.class, args);
 	}
 
+	private final ReservationWriter reservationWriter;
+
 	@HystrixCommand(fallbackMethod = "fallback")
 	@Bean
 	RouterFunction<?> routerFunction(){
-		return RouterFunctions.route(RequestPredicates.GET("/reservations/names"), request -> {
-			return ServerResponse.ok().body(BodyInserters.fromObject("Hi !"));
+		return RouterFunctions.route(GET("/reservations/names"), request -> {
+			return ok().body(fromObject("Hi !"));
+		}).andRoute(POST("/reservations"), request -> {
+			reservationWriter.write("This is a test message");
 		});
 	}
 
 	public Mono<ServerResponse> fallback(){
-		return ServerResponse.ok().body(BodyInserters.fromObject(new ArrayList()));
+		return ok().body(fromObject(new ArrayList()));
 	}
+}
+
+@MessagingGateway
+interface ReservationWriter{
+	@Gateway(requestChannel = "output")
+	void write(String rn);
+}
+
+interface ReservationChannels {
+
+	@Output
+	MessageChannel output();
 }
 
 @FeignClient("reservation-service")
